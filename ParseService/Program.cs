@@ -1,7 +1,20 @@
-using ParseService;
+using ParseService.Options;
+using ParseService.Services;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
+IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((context , services) =>
+    {
+        services.AddHttpClient();
+        services.AddHostedService<NewsBackgroundService>();
+        services.AddSingleton<IMessangerService, TelegramService>();
+        services.Configure<MainOptions>(context.Configuration.GetSection("MainOptions"));
+        services.AddMemoryCache(); 
+    })
+    .ConfigureLogging(logging =>
+    {
+        logging.ClearProviders();
+        logging.AddConsole();
+    })
+    .Build();
 
-var host = builder.Build();
-host.Run();
+await host.RunAsync();
