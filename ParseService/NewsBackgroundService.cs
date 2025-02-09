@@ -6,6 +6,7 @@ using ParseService.Models.Response;
 using ParseService.Options;
 using ParseService.Repository;
 using ParseService.Services;
+using PuppeteerSharp;
 
 public class NewsBackgroundService : BackgroundService
 {
@@ -36,23 +37,31 @@ public class NewsBackgroundService : BackgroundService
      
         while (!stoppingToken.IsCancellationRequested)
         {
-            using var scope = _scopeFactory.CreateScope();
-            _parseRepository = scope.ServiceProvider.GetRequiredService<IParseRepository>();
-            await FetchLatestAnnouncements();
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            try
+            {
+               
+                await FetchLatestAnnouncements();
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            }catch(Exception ex)
+            {
+                _logger.LogError($"Ошибка рабты сервиса {DateTime.UtcNow}");
+            }    
         }
     }
 
     private async Task FetchLatestAnnouncements()
     {
-
-
-        var client = _httpClientFactory.CreateClient();
-        var url = _mainOptions.MainUrl;
-
         try
         {
+            using var scope = _scopeFactory.CreateScope();
+            _parseRepository = scope.ServiceProvider.GetRequiredService<IParseRepository>();
+
+
+            var client = _httpClientFactory.CreateClient();
+            var url = _mainOptions.MainUrl;
             var response = await client.GetAsync(url);
+
+
             await JsonParser(response);
         }
         catch (Exception ex)
@@ -89,25 +98,7 @@ public class NewsBackgroundService : BackgroundService
                 }
                 else
                 {
-                    if (announcementsDbEntity.First().AnnId == announcements.Data.Items.First().AnnId)
-                    {
-                        _logger.LogInformation($"Новых новостей нет");
-                        return;
-                    }
-                    else
-                    {
-                        //TODO: Проблема если несколько новостей будет 
-                       foreach(var item in announcements.Data.Items)
-                        {
-                            if(item.AnnId == announcementsDbEntity.First().AnnId)
-                            {
-                                break;
-                            }
-                            await _parseRepository.AddAnnouncements(item, cancellationToken: default);
-                            var responseTelegram = new AnnouncementItemResponse(item.AnnId, item.AnnTitle, item.AnnDesc, item.AnnUrl);
-                            await ProcessAnnouncements(responseTelegram);
-                        }
-                    }
+                    await PublishNewNews(announcementsDbEntity, announcements);
                 }
             }
             else
@@ -121,26 +112,73 @@ public class NewsBackgroundService : BackgroundService
         }
     }
 
+    private async Task PublishNewNews(IEnumerable<AnnouncementItemResponse> announcementsDbEntity, AnnouncementsResponse? announcements)
+    {
+        try
+        {
+            // Работаем с новыми объявлениями
+            var latestAnnouncements = announcements.Data.Items
+                .Where(item => !announcementsDbEntity.Any(db => db.AnnId == item.AnnId))
+                .ToList();
+
+            if (latestAnnouncements.Any())
+            {
+                foreach (var item in latestAnnouncements)
+                {
+                    await _parseRepository.AddAnnouncements(item, cancellationToken: default);
+
+                    var responeTelegram = new AnnouncementItemResponse(item.AnnId, item.AnnTitle, item.AnnDesc, item.AnnUrl);
+
+                    await ProcessAnnouncements(responeTelegram);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Нет новых новостей.");
+            }
+        }catch(Exception exception)
+        {
+            _logger.LogError($"Ошибка при публикации новостей {DateTime.UtcNow} - {exception.Message}");
+        }
+    }
+
     private async Task ProcessAnnouncements(AnnouncementsResponse announcements)
     {
         foreach (var item in announcements.Data.Items)
         {
-            await _messangerService.SendToTelegram(item);
-            _logger.LogInformation($"Заголовок: {item.AnnTitle}\nСсылка: {item.AnnUrl}\nОписание: {item.AnnDesc}");
+            try
+            {
+                await _messangerService.SendToTelegram(item);
+                _logger.LogInformation($"Заголовок: {item.AnnTitle}\nСсылка: {item.AnnUrl}\nОписание: {item.AnnDesc}");
+            }
+            catch(Exception exception)
+            {
+                _logger.LogError($"Ошибка при отправке данных в телеграм {DateTime.UtcNow} - {exception.Message}");
+            }
+           
         }
     }
 
     private async Task ProcessAnnouncements(AnnouncementItemResponse announcementResponse)
     {
-        var annoncement = new AnnouncementItem { AnnId = announcementResponse.AnnId,
-            AnnDesc = announcementResponse.AnnDesc,
-            AnnTitle = announcementResponse.AnnTitle,
-            AnnUrl = announcementResponse.AnnUrl, 
-            CTime = DateTime.Now.Microsecond, Language = "Ru_ru" 
-        };
+        try
+        {
+            var annoncement = new AnnouncementItem
+            {
+                AnnId = announcementResponse.AnnId,
+                AnnDesc = announcementResponse.AnnDesc,
+                AnnTitle = announcementResponse.AnnTitle,
+                AnnUrl = announcementResponse.AnnUrl,
+                CTime = DateTime.Now.Microsecond,
+                Language = "Ru_ru"
+            };
             await _messangerService.SendToTelegram(annoncement);
             _logger.LogInformation($"Заголовок: {announcementResponse.AnnTitle}\nСсылка: {announcementResponse.AnnUrl}\nОписание: {announcementResponse.AnnDesc}");
-        
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError($"Ошибка при отправке данных в телеграм {DateTime.UtcNow} - {exception.Message}");
+        }
     }
 
 }
