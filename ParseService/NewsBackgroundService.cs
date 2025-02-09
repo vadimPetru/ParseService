@@ -30,6 +30,7 @@ public class NewsBackgroundService : BackgroundService
         _messangerService = messangerService;
         _memoryCache = memoryCache;
         _scopeFactory = scopeFactory;
+      
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,7 +40,8 @@ public class NewsBackgroundService : BackgroundService
         {
             try
             {
-               
+                using var scope = _scopeFactory.CreateScope();
+                _parseRepository = scope.ServiceProvider.GetRequiredService<IParseRepository>();
                 await FetchLatestAnnouncements();
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }catch(Exception ex)
@@ -53,10 +55,6 @@ public class NewsBackgroundService : BackgroundService
     {
         try
         {
-            using var scope = _scopeFactory.CreateScope();
-            _parseRepository = scope.ServiceProvider.GetRequiredService<IParseRepository>();
-
-
             var client = _httpClientFactory.CreateClient();
             var url = _mainOptions.MainUrl;
             var response = await client.GetAsync(url);
