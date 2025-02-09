@@ -5,6 +5,7 @@ using ParseService.Services.MessangerService;
 using System.Text.Json;
 using ParseService.Repository.Parse;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ParseService.Services.NewsService
 {
@@ -12,7 +13,8 @@ namespace ParseService.Services.NewsService
         IOptions<MainOptions> mainOptions,
         ILogger<NewsService> logger,
         IServiceScopeFactory serviceScopeFactory,
-        IMessangerService messangerService
+        IMessangerService messangerService,
+        IMemoryCache memoryCache
             ) : INewsService
     {
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
@@ -21,7 +23,9 @@ namespace ParseService.Services.NewsService
         private readonly IMessangerService _messangerService = messangerService;
         private IParseRepository _parseRepository;
         private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
- 
+        private readonly IMemoryCache _memoryCache = memoryCache;
+
+
         public async Task FetchLatestAnnouncements()
         {
             try
@@ -46,7 +50,27 @@ namespace ParseService.Services.NewsService
 
         private async Task JsonParser(HttpResponseMessage response)
         {
-            var announcementsDbEntity = await _parseRepository.GetAnnouncements(cancellationToken: default);
+            string cacheKey = "announceMent";
+            IEnumerable<AnnouncementItemResponse> announcementsDbEntity;
+
+            // Проверяем, есть ли данные в кеше
+            if (!_memoryCache.TryGetValue(cacheKey, out IEnumerable<AnnouncementItemResponse> announcementsData))
+            {
+                // Если данных нет в кеше, получаем из базы данных или другого источника
+                announcementsData = await _parseRepository.GetAnnouncements(cancellationToken: default);
+
+                // Если данные успешно получены, сохраняем их в кеш
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(2))  // Данные будут жить в кеше 2 минуты
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(2));  // Данные будут храниться в кеше 2 минуты
+
+                _memoryCache.Set(cacheKey, announcementsData, cacheEntryOptions);
+                _logger.LogInformation("Данные записаны в кэш");
+            }
+           
+                 announcementsDbEntity = announcementsData;
+            
+         
 
             if (response.IsSuccessStatusCode)
             {

@@ -20,7 +20,6 @@ public class NewsBackgroundService : BackgroundService
             {
 
                 await _newsService.FetchLatestAnnouncements();
-
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }catch(Exception ex)
             {

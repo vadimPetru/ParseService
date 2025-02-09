@@ -8,17 +8,30 @@ namespace ParseService.Services.MessangerService
     public class TelegramService : IMessangerService
     {
         private readonly MainOptions _mainOptions;
+        private readonly ILogger<TelegramService> _logger;
 
-        public TelegramService(IOptions<MainOptions> mainOptions)
+        public TelegramService(IOptions<MainOptions> mainOptions,
+            ILogger<TelegramService> logger
+            )
         {
             _mainOptions = mainOptions.Value;
+            _logger = logger;
         }
 
         public async Task SendToTelegram(AnnouncementItem ann)
         {
             var botClient = new TelegramBotClient(_mainOptions.TelegramToken);
             string message = $"📢 {ann.AnnTitle}\n📝 {ann.AnnDesc}\n🔗 {ann.AnnUrl}\n🕒";
-            await botClient.SendTextMessageAsync(_mainOptions.ChatId, message);
+            try
+            {
+                await botClient.SendTextMessageAsync(_mainOptions.ChatId, message);
+            }
+            catch
+            {
+                _logger.LogError("Ошибка при отправке сообщения в телеграм");
+            }
+          
+            
         }
     }
 }
