@@ -3,7 +3,7 @@ using ParseService.Models;
 using ParseService.Options;
 using Telegram.Bot;
 
-namespace ParseService.Services
+namespace ParseService.Services.MessangerService
 {
     public class TelegramService : IMessangerService
     {

@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using ParseService.Data;
 using ParseService.Options;
-using ParseService.Repository;
-using ParseService.Services;
+using ParseService.Repository.Parse;
+using ParseService.Services.MessangerService;
+using ParseService.Services.NewsService;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context , services) =>
@@ -11,6 +12,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddHttpClient();
         services.AddHostedService<NewsBackgroundService>();
         services.AddSingleton<IMessangerService, TelegramService>();
+        services.AddSingleton<INewsService, NewsService>();
         services.AddScoped<IParseRepository, ParseRepository>();
 
         // Регистрируем конфигурационные опции
@@ -31,4 +33,4 @@ IHost host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
-await host.RunAsync();
+await host.RunAsync(); 

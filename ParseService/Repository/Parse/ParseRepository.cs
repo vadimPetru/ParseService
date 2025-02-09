@@ -3,7 +3,7 @@ using ParseService.Data;
 using ParseService.Models;
 using ParseService.Models.Response;
 
-namespace ParseService.Repository
+namespace ParseService.Repository.Parse
 {
     public class ParseRepository : IParseRepository
     {
@@ -19,7 +19,7 @@ namespace ParseService.Repository
         public async Task AddAnnouncements(AnnouncementItem announcementItem,
                                            CancellationToken cancellationToken)
         {
-            await _parseDbContext.Announcements.AddAsync(announcementItem,cancellationToken);
+            await _parseDbContext.Announcements.AddAsync(announcementItem, cancellationToken);
             await _parseDbContext.SaveChangesAsync(cancellationToken);
         }
         /// <summary>
@@ -27,12 +27,12 @@ namespace ParseService.Repository
         /// </summary>
         public async Task<IEnumerable<AnnouncementItemResponse>> GetAnnouncements(CancellationToken cancellationToken)
         {
-                  var announcements =  await _parseDbContext.Announcements
-                            .AsNoTracking()
-                            .OrderByDescending(a => a.CTime)
-                            .Take(10)
-                            .Select(a => new AnnouncementItemResponse(a.AnnId,a.AnnTitle,a.AnnDesc,a.AnnUrl))
-                            .ToListAsync(cancellationToken);
+            var announcements = await _parseDbContext.Announcements
+                      .AsNoTracking()
+                      .OrderByDescending(a => a.CTime)
+                      .Take(10)
+                      .Select(a => new AnnouncementItemResponse(a.AnnId, a.AnnTitle, a.AnnDesc, a.AnnUrl))
+                      .ToListAsync(cancellationToken);
 
             return announcements is null ? Enumerable.Empty<AnnouncementItemResponse>() : announcements;
         }

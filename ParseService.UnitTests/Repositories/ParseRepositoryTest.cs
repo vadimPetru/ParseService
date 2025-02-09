@@ -2,7 +2,7 @@
 using ParseService.Data;
 using ParseService.Models;
 using ParseService.Models.Response;
-using ParseService.Repository;
+using ParseService.Repository.Parse;
 
 namespace ParseService.UnitTests.Repositories
 {

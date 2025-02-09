@@ -1,6 +1,6 @@
 ﻿using ParseService.Models;
 
-namespace ParseService.Services
+namespace ParseService.Services.MessangerService
 {
     public interface IMessangerService
     {

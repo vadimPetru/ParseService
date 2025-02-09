@@ -1,7 +1,7 @@
 ﻿using ParseService.Models;
 using ParseService.Models.Response;
 
-namespace ParseService.Repository;
+namespace ParseService.Repository.Parse;
 
 public interface IParseRepository
 {
