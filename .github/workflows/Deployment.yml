@@ -1,0 +1,58 @@
+name: Deploy .NET Background Service
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Клонирование репозитория
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Установка .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: 📦 Восстановление зависимостей
+      run: dotnet restore
+
+    - name: 🏗️ Сборка проекта
+      run: dotnet build --no-restore --configuration Release
+
+    - name: ✅ Запуск unit-тестов
+      run: dotnet test --no-build --verbosity normal --configuration Release
+
+    - name: 🚀 Публикация проекта
+      run: dotnet publish -c Release -o publish
+
+    - name: 🔄 Деплой на сервер
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          echo "🛠️ Остановка сервиса..."
+          sudo systemctl stop myservice || true
+
+          echo "📂 Очистка старых файлов..."
+          sudo rm -rf /var/www/myapp/*
+
+          echo "📤 Копирование новых файлов..."
+          scp -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
+
+          echo "🔐 Настройка переменных окружения..."
+          echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" | sudo tee /etc/environment
+          echo "CHAT_ID=${{ secrets.CHAT_ID }}" | sudo tee -a /etc/environment
+          echo "MAIN_URL=${{ secrets.MAIN_URL }}" | sudo tee -a /etc/environment
+          source /etc/environment
+
+          echo "🚀 Запуск сервиса..."
+          sudo systemctl restart myservice
+
+    - name: ✅ Успешное завершение
+      run: echo "✅ Деплой завершён успешно!"
