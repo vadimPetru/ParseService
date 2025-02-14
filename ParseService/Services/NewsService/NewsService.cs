@@ -42,7 +42,7 @@ namespace ParseService.Services.NewsService
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Ошибка при запросе к API:{DateTime.UtcNow} {ex.Message}");
+                _logger.LogError($"Ошибка при запросе к API:Значение конфигурации:{_mainOptions.MAIN_URL}{DateTime.UtcNow} {ex.Message}");
             }
         }
 
