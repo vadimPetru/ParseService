@@ -1,0 +1,70 @@
+name: Deploy .NET Background Service
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Клонирование репозитория
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Установка .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: 📦 Восстановление зависимостей
+      run: dotnet restore
+
+    - name: 🏗️ Сборка проекта
+      run: dotnet build --no-restore --configuration Release
+
+    - name: ✅ Запуск unit-тестов
+      run: dotnet test --no-build --verbosity normal --configuration Release
+
+    - name: 🚀 Публикация проекта
+      run: dotnet publish -c Release -o publish
+
+    - name: 📤 Копирование файлов на сервер
+      run: |
+        echo "📂 Проверка содержимого publish/"
+        ls -la publish || echo "❌ Папка publish не найдена!"
+        echo "📤 Создание папки на сервере..."
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p /var/www/myapp/"
+        echo "📤 Копирование файлов через SCP..."
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
+
+    - name: 🔄 Деплой на сервер
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          echo "🛠️ Остановка сервиса..."
+          sudo systemctl stop myservice || true
+
+          echo "📜 Настройка прав доступа..."
+          sudo chmod -R 755 /var/www/myapp/
+
+          echo "🔐 Настройка переменных окружения..."
+          echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" | sudo tee /etc/environment
+          echo "CHAT_ID=${{ secrets.CHAT_ID }}" | sudo tee -a /etc/environment
+          echo "MAIN_URL=${{ secrets.MAIN_URL }}" | sudo tee -a /etc/environment
+          source /etc/environment
+
+          echo "🚀 Запуск сервиса..."
+          sudo systemctl start myservice
+
+          # Проверка на работоспособность сервиса
+          echo "⏳ Ожидание старта сервиса..."
+          sleep 10  # Даем время сервису на запуск
+          echo "📊 Проверка статуса сервиса..."
+          sudo systemctl is-active --quiet myservice && echo "✅ Сервис работает!" || echo "❌ Сервис не работает!"
+
+    - name: ✅ Успешное завершение
+      run: echo "✅ Деплой завершён успешно!"
