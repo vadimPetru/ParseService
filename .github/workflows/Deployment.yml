@@ -42,8 +42,9 @@ jobs:
           echo "📂 Очистка старых файлов..."
           sudo rm -rf /var/www/myapp/*
 
+          sudo apt-get update && sudo apt-get install -y sshpass
           echo "📤 Копирование новых файлов..."
-          scp -o StrictHostKeyChecking=no -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
 
           echo "🔐 Настройка переменных окружения..."
           echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" | sudo tee /etc/environment
