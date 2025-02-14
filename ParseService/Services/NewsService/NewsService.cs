@@ -34,7 +34,7 @@ namespace ParseService.Services.NewsService
 
                 _parseRepository = scope.ServiceProvider.GetRequiredService<IParseRepository>();
                 var client = _httpClientFactory.CreateClient();
-                var url = _mainOptions.MainUrl;
+                var url = _mainOptions.MAIN_URL;
                 var response = await client.GetAsync(url);
 
 

@@ -20,11 +20,11 @@ namespace ParseService.Services.MessangerService
 
         public async Task SendToTelegram(AnnouncementItem ann)
         {
-            var botClient = new TelegramBotClient(_mainOptions.TelegramToken);
+            var botClient = new TelegramBotClient(_mainOptions.TELEGRAM_TOKEN);
             string message = $"📢 {ann.AnnTitle}\n📝 {ann.AnnDesc}\n🔗 {ann.AnnUrl}\n🕒";
             try
             {
-                await botClient.SendTextMessageAsync(_mainOptions.ChatId, message);
+                await botClient.SendTextMessageAsync(_mainOptions.CHAT_ID, message);
             }
             catch
             {

@@ -2,9 +2,9 @@
 {
     public class MainOptions
     {
-        public string ChatId { get; set; }
-        public string TelegramToken { get; set; }
-        public string MainUrl { get; set; }
+        public string CHAT_ID { get; set; }
+        public string TELEGRAM_TOKEN { get; set; }
+        public string MAIN_URL { get; set; }
     }
 }
     
