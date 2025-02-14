@@ -28,7 +28,11 @@ jobs:
 
     - name: 🚀 Публикация проекта
       run: dotnet publish -c Release -o publish
-
+    - name: 📤 Копирование файлов на сервер
+      run: |
+        echo "📂 Проверка содержимого publish/"
+        ls -la publish
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
     - name: 🔄 Деплой на сервер
       uses: appleboy/ssh-action@v0.1.10
       with:
