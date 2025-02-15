@@ -51,12 +51,15 @@ jobs:
           echo "📜 Настройка прав доступа..."
           sudo chmod -R 755 /var/www/myapp/
 
-          echo "🔐 Настройка переменных окружения..."
-          echo "TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}" | sudo tee /etc/environment
-          echo "CHAT_ID=${{ secrets.CHAT_ID }}" | sudo tee -a /etc/environment
-          echo "MAIN_URL=${{ secrets.MAIN_URL }}" | sudo tee -a /etc/environment
-          source /etc/environment
-
+           echo "🔐 Создание файла secret.json..."
+            sudo bash -c 'cat > /var/www/myapp/secret.json <<EOF
+            {
+              "MainOptions": {
+                "TELEGRAM_TOKEN": "${{ secrets.TELEGRAM_TOKEN }}",
+                "CHAT_ID": "${{ secrets.CHAT_ID }}",
+                "MAIN_URL": "${{ secrets.MAIN_URL }}"
+              }
+            }
           echo "🚀 Запуск сервиса..."
           sudo systemctl start myservice
 
