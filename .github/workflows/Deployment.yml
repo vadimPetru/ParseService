@@ -16,9 +16,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-        
-    - name: 🛠️ Установка EF Core CLI 
-      run: dotnet new tool-manifest && dotnet tool install dotnet-ef
 
     - name: 📦 Восстановление зависимостей
       run: dotnet restore
@@ -42,17 +39,6 @@ jobs:
         sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p /var/www/myapp/"
         echo "📤 Копирование файлов через SCP..."
         sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
-
-    - name: 🚀 Установка dotnet-ef на сервере
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        script: |
-          echo "🛠️ Установка dotnet-ef..."
-          dotnet tool install --global dotnet-ef
-          export PATH="$PATH:/root/.dotnet/tools"  # Добавляем путь к dotnet-ef в PATH
 
     - name: 🔄 Деплой на сервер
       uses: appleboy/ssh-action@v0.1.10
@@ -84,8 +70,8 @@ jobs:
           sleep 10  # Даем время сервису на запуск
           echo "📊 Проверка статуса сервиса..."
           sudo systemctl is-active --quiet myservice && echo "✅ Сервис работает!" || echo "❌ Сервис не работает!"
-          
-    - name: 🚀 Выполнение миграций на сервере
+
+    - name: 🚀 Выполнение миграций через DesignTimeDbContextFactory
       uses: appleboy/ssh-action@v0.1.10
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -93,8 +79,8 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
           cd /var/www/myapp/
-          export PATH="$PATH:/root/.dotnet/tools"  # Убедимся, что dotnet-ef доступен
-          dotnet ef database update --project /var/www/myapp/ParseService.dll --configuration Release
+          echo "🛠️ Выполнение миграций..."
+          dotnet exec --runtimeconfig /var/www/myapp/ParseService.runtimeconfig.json --depsfile /var/www/myapp/ParseService.deps.json /var/www/myapp/ParseService.dll --migrate
 
     - name: Restart service
       uses: appleboy/ssh-action@v0.1.10
