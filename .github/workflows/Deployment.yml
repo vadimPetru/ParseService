@@ -56,12 +56,14 @@ jobs:
           echo "🔐 Создание файла secret.json..."
           sudo bash -c "cat > /var/www/myapp/secret.json <<EOF
           {
-             \"MainOptions\": {
+            \"ConnectionStrings\": {
+              \"DefaultConnection\": \"Data Source=/var/www/myapp/app.db\"
+            },
+            \"MainOptions\": {
               \"TELEGRAM_TOKEN\": \"${{ secrets.TELEGRAM_TOKEN }}\",
               \"CHAT_ID\": \"${{ secrets.CHAT_ID }}\",
               \"MAIN_URL\": \"${{ secrets.MAIN_URL }}\"
-              }
-            
+            }
           }
           EOF"
         
@@ -81,6 +83,21 @@ jobs:
           cd /var/www/myapp/
           echo "🛠️ Выполнение миграций..."
           dotnet exec --runtimeconfig /var/www/myapp/ParseService.runtimeconfig.json --depsfile /var/www/myapp/ParseService.deps.json /var/www/myapp/ParseService.dll --migrate
+
+    - name: 🛠️ Проверка наличия базы данных
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          cd /var/www/myapp/
+          if [ -f "app.db" ]; then
+            echo "✅ Файл app.db найден!"
+          else
+            echo "❌ Файл app.db НЕ найден! Попробуйте запустить миграции вручную."
+            exit 1
+          fi
 
     - name: Restart service
       uses: appleboy/ssh-action@v0.1.10
