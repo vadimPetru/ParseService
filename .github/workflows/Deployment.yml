@@ -118,7 +118,7 @@ jobs:
 
           echo "🚀 Выполнение миграций базы данных..."
           cd /var/www/myapp
-          dotnet ef database update --project /var/www/myapp/ParseService.csproj --environment Production
+          dotnet ef database update --project /var/www/myapp/ParseService.csproj --environment Production  --verbose
 
     - name: Restart service
       uses: appleboy/ssh-action@v0.1.10
