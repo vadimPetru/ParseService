@@ -38,7 +38,6 @@ jobs:
         echo "📤 Копирование файлов через SCP..."
         sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
         sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r ./ParseService/Migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/Migrations
-        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no ./ParseService/ParseService.csproj ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/ParseService.csproj
 
     - name: 🔄 Деплой на сервер
       uses: appleboy/ssh-action@v0.1.10
@@ -118,7 +117,7 @@ jobs:
 
           echo "🚀 Выполнение миграций базы данных..."
           cd /var/www/myapp
-          dotnet ef database update --project /var/www/myapp/ParseService.csproj --environment Production  --verbose
+          dotnet ef database update --project /var/www/myapp/ParseService.dll --environment Production  --verbose
 
     - name: Restart service
       uses: appleboy/ssh-action@v0.1.10
