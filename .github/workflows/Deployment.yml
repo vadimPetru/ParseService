@@ -67,13 +67,17 @@ jobs:
           }
           EOF"
         
+          # Создание файла app.db, если он отсутствует
+          echo "🛠️ Создание файла app.db..."
+          touch /var/www/myapp/app.db
+
           # Проверка на работоспособность сервиса
           echo "⏳ Ожидание старта сервиса..."
           sleep 10  # Даем время сервису на запуск
           echo "📊 Проверка статуса сервиса..."
           sudo systemctl is-active --quiet myservice && echo "✅ Сервис работает!" || echo "❌ Сервис не работает!"
 
-    - name: 🚀 Выполнение миграций через DesignTimeDbContextFactory
+    - name: 🚀 Запуск приложения
       uses: appleboy/ssh-action@v0.1.10
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -81,11 +85,10 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
           cd /var/www/myapp/
-          
-          echo "🛠️ Выполнение миграций..."
-          dotnet ef database update --assembly /var/www/myapp/ParseService.dll --startup-assembly /var/www/myapp/ParseService.dll
-          
-    - name: 🛠️ Проверка наличия базы данных
+          echo "🚀 Запуск приложения..."
+          dotnet /var/www/myapp/ParseService.dll
+
+    - name: 🛠️ Проверка наличия базы данных после запуска
       uses: appleboy/ssh-action@v0.1.10
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -96,7 +99,7 @@ jobs:
           if [ -f "app.db" ]; then
             echo "✅ Файл app.db найден!"
           else
-            echo "❌ Файл app.db НЕ найден! Попробуйте запустить миграции вручную."
+            echo "❌ Файл app.db НЕ найден! Проверьте логи приложения."
             exit 1
           fi
 
