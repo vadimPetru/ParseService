@@ -43,6 +43,17 @@ jobs:
         echo "📤 Копирование файлов через SCP..."
         sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
 
+    - name: 🚀 Установка dotnet-ef на сервере
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          echo "🛠️ Установка dotnet-ef..."
+          dotnet tool install --global dotnet-ef
+          export PATH="$PATH:/root/.dotnet/tools"  # Добавляем путь к dotnet-ef в PATH
+
     - name: 🔄 Деплой на сервер
       uses: appleboy/ssh-action@v0.1.10
       with:
@@ -82,8 +93,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
           cd /var/www/myapp/
-          export DOTNET_ROOT=/usr/share/dotnet
-          export PATH=$PATH:/usr/share/dotnet
+          export PATH="$PATH:/root/.dotnet/tools"  # Убедимся, что dotnet-ef доступен
           dotnet ef database update --project /var/www/myapp/ParseService.dll --configuration Release
 
     - name: Restart service
