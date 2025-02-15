@@ -83,8 +83,8 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
           echo "🚀 Выполнение миграций базы данных..."
-          cd /var/www/myapp
-          dotnet ef database update --project ./ParseService/ParseService.csproj --environment Production
+          cd /var/www/myapp/ParseService
+          dotnet ef database update --project /var/www/myapp/ParseService/ParseService.csproj --environment Production
 
     - name: Restart service
       uses: appleboy/ssh-action@v0.1.10
