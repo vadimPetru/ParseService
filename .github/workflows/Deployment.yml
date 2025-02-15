@@ -37,6 +37,8 @@ jobs:
         sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p /var/www/myapp/"
         echo "📤 Копирование файлов через SCP..."
         sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r ./ParseService/Migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/Migrations
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no ./ParseService/ParseService.csproj ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/myapp/ParseService.csproj
 
     - name: 🔄 Деплой на сервер
       uses: appleboy/ssh-action@v0.1.10
@@ -72,9 +74,35 @@ jobs:
           echo "📊 Проверка статуса сервиса..."
           sudo systemctl is-active --quiet myservice && echo "✅ Сервис работает!" || echo "❌ Сервис не работает!"
           
-    - name: Установка EF Core инструмента
-      run: dotnet tool install --global dotnet-ef
-
+    - name: Ensure database file exists
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          echo "📂 Проверяем, существует ли папка /var/www/myapp/..."
+          if [ ! -d "/var/www/myapp/" ]; then
+            echo "📁 Папка не найдена. Создаём..."
+            mkdir -p /var/www/myapp/
+          else
+            echo "✅ Папка уже существует. Пропускаем создание."
+          fi
+          
+          echo "📂 Проверяем, существует ли файл базы данных..."
+          if [ ! -f "/var/www/myapp/app.db" ]; then
+            echo "📜 Файл базы данных не найден. Создаём..."
+            touch /var/www/myapp/app.db
+          else
+            echo "✅ Файл базы данных уже существует."
+          fi
+    
+          echo "🔧 Устанавливаем права на /var/www/myapp/app.db..."
+          chmod 777 /var/www/myapp/app.db
+    
+          echo "📂 Проверяем файлы в /var/www/myapp/:"
+          ls -la /var/www/myapp/
+          
     - name: Run migrations
       uses: appleboy/ssh-action@v0.1.10
       with:
@@ -82,9 +110,11 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
+          echo "📦 Установка EF Core CLI..."
+          dotnet tool install --global dotnet-ef || echo "dotnet-ef уже установлен"
           echo "🚀 Выполнение миграций базы данных..."
           cd /var/www/myapp
-          dotnet ef database update --context ApplicationDbContext --project /var/www/myapp/ParseService/ParseService.csproj --environment Production
+          dotnet ef database update --project /var/www/myapp/ParseService.csproj --environment Production
 
     - name: Restart service
       uses: appleboy/ssh-action@v0.1.10
