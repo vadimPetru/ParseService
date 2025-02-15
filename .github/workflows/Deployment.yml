@@ -16,6 +16,9 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+        
+    - name: 🛠️ Установка EF Core CLI 
+      run: dotnet new tool-manifest && dotnet tool install dotnet-ef
 
     - name: 📦 Восстановление зависимостей
       run: dotnet restore
@@ -27,9 +30,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal --configuration Release
       
     - name: 🚀 Выполнение миграций перед публикацией
-      run: |
-        export PATH="$PATH:$HOME/.dotnet/tools"
-        dotnet ef database update --project ./ParseService/ParseService.csproj --configuration Release
+      run: dotnet tool run dotnet-ef database update --project ./ParseService/ParseService.csproj --configuration Release
 
     - name: 🚀 Публикация проекта
       run: dotnet publish -c Release -o publish
