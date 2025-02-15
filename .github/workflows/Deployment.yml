@@ -28,9 +28,20 @@ jobs:
 
     - name: ✅ Запуск unit-тестов
       run: dotnet test --no-build --verbosity normal --configuration Release
-      
     - name: 🚀 Выполнение миграций перед публикацией
-      run: dotnet tool run dotnet-ef database update --project ./ParseService/ParseService.csproj --configuration Release
+      run: |
+            dotnet ef database update --project ./ParseService/ParseService.csproj --configuration Release
+            ls -la  # Проверяем, появился ли файл app.db
+  
+    - name: 🛠️ Проверка наличия базы данных
+      run: |
+        if [ -f "app.db" ]; then
+          echo "✅ Файл app.db найден!"
+        else
+          echo "❌ Файл app.db НЕ найден! Попробуйте запустить приложение локально перед деплоем."
+          exit 1
+        fi
+
 
     - name: 🚀 Публикация проекта
       run: dotnet publish -c Release -o publish
