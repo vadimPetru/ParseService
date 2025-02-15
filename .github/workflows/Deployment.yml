@@ -112,6 +112,10 @@ jobs:
         script: |
           echo "📦 Установка EF Core CLI..."
           dotnet tool install --global dotnet-ef || echo "dotnet-ef уже установлен"
+          
+          echo "🔄 Обновление переменной PATH..."
+          export PATH="$HOME/.dotnet/tools:$PATH"
+
           echo "🚀 Выполнение миграций базы данных..."
           cd /var/www/myapp
           dotnet ef database update --project /var/www/myapp/ParseService.csproj --environment Production
