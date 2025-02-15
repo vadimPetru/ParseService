@@ -39,10 +39,17 @@ IHost host = Host.CreateDefaultBuilder(args)
         logging.AddConsole();
     })
     .Build();
-// Применяем миграции при запуске приложения
-using (var scope = host.Services.CreateScope())
+try
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ParseDbContext>();
-    dbContext.Database.Migrate();  // Применяем миграции
+    // Применяем миграции при запуске приложения
+    using (var scope = host.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ParseDbContext>();
+        dbContext.Database.Migrate();  // Применяем миграции
+    }
+}catch(Exception ex)
+{
+    throw new Exception(ex.Message);
 }
+
 await host.RunAsync(); 
