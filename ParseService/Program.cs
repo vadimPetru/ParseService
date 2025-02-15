@@ -39,5 +39,10 @@ IHost host = Host.CreateDefaultBuilder(args)
         logging.AddConsole();
     })
     .Build();
-
+// Применяем миграции при запуске приложения
+using (var scope = host.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ParseDbContext>();
+    dbContext.Database.Migrate();  // Применяем миграции
+}
 await host.RunAsync(); 
