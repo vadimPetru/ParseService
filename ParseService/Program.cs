@@ -37,7 +37,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         logging.ClearProviders();
         logging.AddConsole();
-    }).
+    })
     .Build();
 
 await host.RunAsync(); 
