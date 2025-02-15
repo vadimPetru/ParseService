@@ -71,6 +71,9 @@ jobs:
           sleep 10  # Даем время сервису на запуск
           echo "📊 Проверка статуса сервиса..."
           sudo systemctl is-active --quiet myservice && echo "✅ Сервис работает!" || echo "❌ Сервис не работает!"
+          
+    - name: Установка EF Core инструмента
+      run: dotnet tool install --global dotnet-ef
 
     - name: Run migrations
       uses: appleboy/ssh-action@v0.1.10
