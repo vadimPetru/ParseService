@@ -28,11 +28,13 @@ jobs:
 
     - name: 🚀 Публикация проекта
       run: dotnet publish -c Release -o publish
-
-    - name: 📤 Копирование файлов на сервер
+      
+    - name: 📤 Очистка папки и копирование файлов на сервер
       run: |
         echo "📂 Проверка содержимого publish/"
         ls -la publish || echo "❌ Папка publish не найдена!"
+        echo "❌ Очистка папки на сервере..."
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "rm -rf /var/www/myapp/*"
         echo "📤 Создание папки на сервере..."
         sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p /var/www/myapp/"
         echo "📤 Копирование файлов через SCP..."
@@ -62,9 +64,6 @@ jobs:
             
           }
           EOF"
-
-          echo "🚀 Запуск сервиса..."
-          sudo systemctl start myservice
         
           # Проверка на работоспособность сервиса
           echo "⏳ Ожидание старта сервиса..."
@@ -72,6 +71,26 @@ jobs:
           echo "📊 Проверка статуса сервиса..."
           sudo systemctl is-active --quiet myservice && echo "✅ Сервис работает!" || echo "❌ Сервис не работает!"
 
+    - name: 🚀 Выполнение миграций через DesignTimeDbContextFactory
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          cd /var/www/myapp/
+          echo "🛠️ Выполнение миграций..."
+          dotnet exec --runtimeconfig /var/www/myapp/ParseService.runtimeconfig.json --depsfile /var/www/myapp/ParseService.deps.json /var/www/myapp/ParseService.dll --migrate
+
+    - name: Restart service
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          echo "🚀 Перезапуск сервиса..."
+          sudo systemctl restart myservice
 
     - name: ✅ Успешное завершение
       run: echo "✅ Деплой завершён успешно!"
