@@ -27,7 +27,9 @@ jobs:
       run: dotnet test --no-build --verbosity normal --configuration Release
       
     - name: 🚀 Выполнение миграций перед публикацией
-      run: dotnet ef database update --project ./ParseService/ParseService.csproj --configuration Release
+      run: |
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        dotnet ef database update --project ./ParseService/ParseService.csproj --configuration Release
 
     - name: 🚀 Публикация проекта
       run: dotnet publish -c Release -o publish
