@@ -47,27 +47,31 @@ jobs:
         script: |
           echo "🛠️ Остановка сервиса..."
           sudo systemctl stop myservice || true
-
+    
           echo "📜 Настройка прав доступа..."
           sudo chmod -R 755 /var/www/myapp/
-
-           echo "🔐 Создание файла secret.json..."
-            sudo bash -c 'cat > /var/www/myapp/secret.json <<EOF
-            {
-              "MainOptions": {
-                "TELEGRAM_TOKEN": "${{ secrets.TELEGRAM_TOKEN }}",
-                "CHAT_ID": "${{ secrets.CHAT_ID }}",
-                "MAIN_URL": "${{ secrets.MAIN_URL }}"
+    
+          echo "🔐 Создание файла secret.json..."
+          sudo bash -c "cat > /var/www/myapp/secret.json <<EOF
+          {
+             \"MainOptions\": {
+              \"TELEGRAM_TOKEN\": \"${{ secrets.TELEGRAM_TOKEN }}\",
+              \"CHAT_ID\": \"${{ secrets.CHAT_ID }}\",
+              \"MAIN_URL\": \"${{ secrets.MAIN_URL }}\"
               }
-            }
+            
+          }
+          EOF"
+
           echo "🚀 Запуск сервиса..."
           sudo systemctl start myservice
-
+        
           # Проверка на работоспособность сервиса
           echo "⏳ Ожидание старта сервиса..."
           sleep 10  # Даем время сервису на запуск
           echo "📊 Проверка статуса сервиса..."
           sudo systemctl is-active --quiet myservice && echo "✅ Сервис работает!" || echo "❌ Сервис не работает!"
+
 
     - name: ✅ Успешное завершение
       run: echo "✅ Деплой завершён успешно!"
