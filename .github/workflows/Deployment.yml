@@ -78,6 +78,9 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
+          echo "🔄 Перезагрузка systemd..."
+          sudo systemctl daemon-reload
+
           echo "🚀 Перезапуск службы..."
           sudo systemctl restart myservice
 
@@ -90,7 +93,3 @@ jobs:
     - name: ✅ Успешное завершение
       run: echo "✅ Деплой завершён успешно!"
 
-
-
-    - name: ✅ Успешное завершение
-      run: echo "✅ Деплой завершён успешно!"
