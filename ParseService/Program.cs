@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using ParseService.Data;
-using ParseService.Extensions;
 using ParseService.Options;
 using ParseService.Repository.Parse;
 using ParseService.Services.MessangerService;
@@ -39,7 +38,6 @@ IHost host = Host.CreateDefaultBuilder(args)
         logging.ClearProviders();
         logging.AddConsole();
     })
-    .Build()
-    .AddMigrate();
+    .Build();
 
 await host.RunAsync(); 
