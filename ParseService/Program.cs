@@ -6,6 +6,13 @@ using ParseService.Services.MessangerService;
 using ParseService.Services.NewsService;
 
 IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureAppConfiguration((context, config) =>
+    {
+        // Добавляем конфигурацию из файла secret.json
+        var env = context.HostingEnvironment;
+        config.SetBasePath(env.ContentRootPath)
+              .AddJsonFile("secret.json", optional: true, reloadOnChange: true); // Добавляем файл secret.json
+    })
     .ConfigureServices((context , services) =>
     {
         // Регистрируем HttpClient, фоновой сервис, мессенджер и другие сервисы
@@ -30,7 +37,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         logging.ClearProviders();
         logging.AddConsole();
-    })
+    }).
     .Build();
 
 await host.RunAsync(); 
