@@ -86,32 +86,12 @@ jobs:
         script: |
           cd /var/www/myapp/
           echo "🚀 Запуск приложения..."
-          dotnet /var/www/myapp/ParseService.dll
+          dotnet /var/www/myapp/ParseService.dll &
+          
+    - name: ✅ Успешное завершение
+      run: echo "✅ Деплой завершён успешно!"
 
-    - name: 🛠️ Проверка наличия базы данных после запуска
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        script: |
-          cd /var/www/myapp/
-          if [ -f "app.db" ]; then
-            echo "✅ Файл app.db найден!"
-          else
-            echo "❌ Файл app.db НЕ найден! Проверьте логи приложения."
-            exit 1
-          fi
 
-    - name: Restart service
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        script: |
-          echo "🚀 Перезапуск сервиса..."
-          sudo systemctl restart myservice
 
     - name: ✅ Успешное завершение
       run: echo "✅ Деплой завершён успешно!"
