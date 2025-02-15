@@ -63,9 +63,14 @@ jobs:
             
           }
           EOF"
-
-          echo "🚀 Запуск сервиса..."
-          sudo systemctl start myservice
+          
+            echo "🚀 Запуск миграций базы данных..."
+            cd /var/www/myapp
+            dotnet tool install --global dotnet-ef || echo "dotnet-ef уже установлен"
+            export PATH="$HOME/.dotnet/tools:$PATH"
+            dotnet ef database update --project /var/www/myapp/ParseService.dll --environment Production  --verbose
+            echo "🚀 Запуск сервиса..."
+            sudo systemctl start myservice
         
           # Проверка на работоспособность сервиса
           echo "⏳ Ожидание старта сервиса..."
@@ -101,23 +106,6 @@ jobs:
     
           echo "📂 Проверяем файлы в /var/www/myapp/:"
           ls -la /var/www/myapp/
-          
-    - name: Run migrations
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        script: |
-          echo "📦 Установка EF Core CLI..."
-          dotnet tool install --global dotnet-ef || echo "dotnet-ef уже установлен"
-          
-          echo "🔄 Обновление переменной PATH..."
-          export PATH="$HOME/.dotnet/tools:$PATH"
-
-          echo "🚀 Выполнение миграций базы данных..."
-          cd /var/www/myapp
-          dotnet ef database update --project /var/www/myapp/ParseService.dll --environment Production  --verbose
 
     - name: Restart service
       uses: appleboy/ssh-action@v0.1.10
