@@ -81,9 +81,10 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
           cd /var/www/myapp/
+          
           echo "🛠️ Выполнение миграций..."
-          dotnet exec --runtimeconfig /var/www/myapp/ParseService.runtimeconfig.json --depsfile /var/www/myapp/ParseService.deps.json /var/www/myapp/ParseService.dll --migrate
-
+          dotnet ef database update --assembly /var/www/myapp/ParseService.dll --startup-assembly /var/www/myapp/ParseService.dll
+          
     - name: 🛠️ Проверка наличия базы данных
       uses: appleboy/ssh-action@v0.1.10
       with:
