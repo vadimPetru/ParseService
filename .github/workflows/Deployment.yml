@@ -70,6 +70,8 @@ jobs:
           # Создание файла app.db, если он отсутствует
           echo "🛠️ Создание файла app.db..."
           touch /var/www/myapp/app.db
+          sudo chmod 644 /var/www/myapp/app.db
+          sudo chown www-data:www-data /var/www/myapp/app.db
 
     - name: 🚀 Перезапуск службы
       uses: appleboy/ssh-action@v0.1.10
