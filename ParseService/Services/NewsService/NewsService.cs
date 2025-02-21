@@ -116,10 +116,7 @@ namespace ParseService.Services.NewsService
             {
                 // Работаем с новыми объявлениями
                 var latestAnnouncements = announcements.Data.Items
-                    .Where(item => !announcementsDbEntity.Any(db => db.AnnId == item.AnnId
-                    && item.AnnTitle == item.AnnTitle
-                    && item.AnnDesc == item.AnnDesc)
-                    )
+                    .Where(item => !announcementsDbEntity.Any(db => db.AnnId == item.AnnId))
                     .ToList();
 
                 if (latestAnnouncements.Any())

@@ -5,6 +5,7 @@ namespace ParseService.Models;
 public class AnnouncementItem
 {
     [Key]
+    public Guid GuidNews { get; set;}
     public int AnnId { get; set; }
     [Required]
     public string AnnTitle { get; set; }
