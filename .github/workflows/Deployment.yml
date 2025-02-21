@@ -52,6 +52,7 @@ jobs:
     
           echo "📜 Настройка прав доступа..."
           sudo chmod -R 755 /var/www/myapp/
+          sudo chown -R www-data:www-data /var/www/myapp/
     
           echo "🔐 Создание файла secret.json..."
           sudo bash -c "cat > /var/www/myapp/secret.json <<EOF
@@ -70,6 +71,8 @@ jobs:
           # Создание файла app.db, если он отсутствует
           echo "🛠️ Создание файла app.db..."
           touch /var/www/myapp/app.db
+          sudo chmod 755 /var/www/myapp/app.db
+          sudo chown www-data:www-data /var/www/myapp/app.db
 
     - name: 🚀 Перезапуск службы
       uses: appleboy/ssh-action@v0.1.10
