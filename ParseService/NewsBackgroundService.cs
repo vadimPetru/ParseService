@@ -20,7 +20,7 @@ public class NewsBackgroundService : BackgroundService
             {
 
                 await _newsService.FetchLatestAnnouncements();
-                await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
             }catch(Exception ex)
             {
                 _logger.LogError($"Ошибка рабты сервиса {DateTime.UtcNow} - {ex.Message}");
