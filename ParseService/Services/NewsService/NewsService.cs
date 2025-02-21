@@ -64,8 +64,8 @@ namespace ParseService.Services.NewsService
 
                 // Если данные успешно получены, сохраняем их в кеш
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(TimeSpan.FromMinutes(2))  // Данные будут жить в кеше 2 минуты
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(2));  // Данные будут храниться в кеше 2 минуты
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(10))  // Данные будут жить в кеше 2 минуты
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));  // Данные будут храниться в кеше 2 минуты
 
                 _memoryCache.Set(cacheKey, announcementsData, cacheEntryOptions);
                 _logger.LogInformation("Данные записаны в кэш");
