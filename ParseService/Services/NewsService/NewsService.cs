@@ -6,6 +6,7 @@ using System.Text.Json;
 using ParseService.Repository.Parse;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Caching.Memory;
+using Telegram.Bot;
 
 namespace ParseService.Services.NewsService
 {
@@ -42,7 +43,8 @@ namespace ParseService.Services.NewsService
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Ошибка при запросе к API:Значение конфигурации:{_mainOptions.MAIN_URL}{DateTime.UtcNow} {ex.Message}");
+               var message = $"Ошибка при запросе к API:Значение конфигурации:{_mainOptions.MAIN_URL}{DateTime.UtcNow} {ex.Message}";
+                await _messangerService.SendErrorToTelegram(message);
             }
         }
 
@@ -50,6 +52,7 @@ namespace ParseService.Services.NewsService
 
         private async Task JsonParser(HttpResponseMessage response)
         {
+          
             string cacheKey = "announceMent";
             IEnumerable<AnnouncementItemResponse> announcementsDbEntity;
 
@@ -106,7 +109,8 @@ namespace ParseService.Services.NewsService
             }
             else
             {
-                _logger.LogError($"Ошибка API: {response.StatusCode}");
+               var message = $"Ошибка API: {response.StatusCode}";
+               await _messangerService.SendErrorToTelegram(message);
             }
         }
 
@@ -118,7 +122,7 @@ namespace ParseService.Services.NewsService
                 var latestAnnouncements = announcements.Data.Items
                     .Where(item => !announcementsDbEntity.Any(db => db.AnnId == item.AnnId))
                     .ToList();
-
+              
                 if (latestAnnouncements.Any())
                 {
                     foreach (var item in latestAnnouncements)
@@ -137,7 +141,8 @@ namespace ParseService.Services.NewsService
             }
             catch (Exception exception)
             {
-                _logger.LogError($"Ошибка при публикации новостей {DateTime.UtcNow} - {exception.Message}");
+                var message  = $"Ошибка при публикации новостей {DateTime.UtcNow} - {exception.Message}";
+                await _messangerService.SendErrorToTelegram(message);
             }
         }
 
@@ -152,7 +157,8 @@ namespace ParseService.Services.NewsService
                 }
                 catch (Exception exception)
                 {
-                    _logger.LogError($"Ошибка при отправке данных в телеграм {DateTime.UtcNow} - {exception.Message}");
+                    var message = $"Ошибка при отправке данных в телеграм {DateTime.UtcNow} - {exception.Message}";
+                    await _messangerService.SendErrorToTelegram(message);
                 }
 
             }
@@ -176,7 +182,8 @@ namespace ParseService.Services.NewsService
             }
             catch (Exception exception)
             {
-                _logger.LogError($"Ошибка при отправке данных в телеграм {DateTime.UtcNow} - {exception.Message}");
+                var message = $"Ошибка при отправке данных в телеграм {DateTime.UtcNow} - {exception.Message}";
+                await _messangerService.SendErrorToTelegram(message);
             }
         }
     }
